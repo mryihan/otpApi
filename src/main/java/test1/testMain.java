@@ -61,6 +61,7 @@ public class testMain {
                     token = newToken;
                     //refresh the global time
                     Date tempDate = new Date();
+                    //test
                     testMain.time = tempDate;
                     
                     message = "Updating Token for past user";
