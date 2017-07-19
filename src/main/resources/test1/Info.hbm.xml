@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated Jul 18, 2017 10:41:58 AM by Hibernate Tools 4.3.1 -->
+<hibernate-mapping>
+    <class name="test1.Info" table="info" schema="public" optimistic-lock="version">
+        <id name="userId" type="int">
+            <column name="user_id" />
+            <generator class="sequence" />
+        </id>
+        <property name="username" type="string">
+            <column name="username" length="50" not-null="true" unique="true" />
+        </property>
+        <property name="token" type="string">
+            <column name="token" length="10" not-null="true" />
+        </property>
+        <property name="createdOn" type="timestamp">
+            <column name="created_on" length="29" not-null="true" />
+        </property>
+        <property name="secretkey" type="string">
+            <column name="secretkey" length="64" not-null="true" />
+        </property>
+    </class>
+</hibernate-mapping>
