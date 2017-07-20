@@ -31,7 +31,7 @@
             <groupId>com.sparkjava</groupId>
             <artifactId>spark-core</artifactId>
             <version>2.6.0</version>
-            <!-- exclude jetty server for other web server deployment -->
+            <!-- exclude jetty server for other web server deployment 
             <exclusions>
             <exclusion>
                 <groupId>org.eclipse.jetty</groupId>
@@ -42,7 +42,7 @@
                 <artifactId>jetty-webapp</artifactId>
             </exclusion>
         </exclusions>
-            <!-- -->
+            -->
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

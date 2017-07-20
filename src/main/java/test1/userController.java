@@ -21,8 +21,8 @@ import static spark.Spark.post;
  *
  * @author yhuang
  */
-public class userController implements SparkApplication {
-//public class userController {
+//public class userController implements SparkApplication {
+public class userController {
     public static String dataToJson(Object data) {
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -35,9 +35,9 @@ public class userController implements SparkApplication {
         }
     }
 
-    //public static void main(String[] args) {
-    @Override
-    public void init(){
+    public static void main(String[] args) {
+    //@Override
+    //public void init(){
             //UserService a = new UserService();
             //List<String> token = null;
             Map<String,String> display =new HashMap<>();
@@ -76,7 +76,7 @@ public class userController implements SparkApplication {
             //Date testD=sdf.parse(a.validateToken(name, token));
             //Timestamp ts=Timestamp.valueOf(a.validateToken(name, token));
             
-            display.put("Last Token Time", a.validateToken(name, token));
+            display.put("Auth", a.val(name, token));
             display.put("Message", testMain.message);
             return dataToJson(display);
             

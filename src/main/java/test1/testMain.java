@@ -13,6 +13,7 @@ import java.util.*;
 import org.hibernate.Criteria;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.criterion.Projections;
 
 /**
@@ -38,7 +39,7 @@ public class testMain {
 
         //check if user exists by querying database  with a select statement
         //need to throw exception
-        org.hibernate.Transaction tx = session.beginTransaction();
+        Transaction tx = session.beginTransaction();
         try {
 
             //boolean exists = session.createQuery("select token from Info where username=:username").setParameter("username", username).uniqueResult() != null;
@@ -115,6 +116,7 @@ public class testMain {
         if (tx.isActive()) {
             tx.commit();
         }
+        
         return token;
 
     }
@@ -123,11 +125,11 @@ public class testMain {
         List<String> token = null;
         //String token="";
         try {
-            org.hibernate.Transaction tx = session.beginTransaction();
+            Transaction tx = session.beginTransaction();
             Query q = session.createQuery("select token from Info where username=:input");
             q.setParameter("input", username);
             token = q.list();
-
+            
             //Info info = new Info(usernam  e,token,date);
             //session.close();
         } catch (Exception e) {
@@ -152,7 +154,7 @@ public class testMain {
         return token;
     }
 
-    public String validateToken(String username, String token) throws ParseException {
+    /*public String validateToken(String username, String token) throws ParseException {
         String LastTokentime = null;
         message = null;
         //List<Info> test = null;
@@ -199,4 +201,81 @@ public class testMain {
 
         return LastTokentime;
     }
+    */
+    
+  public String val(String username, String token){
+      String auth=null;
+      message=null;
+      String dbtoken=null;
+      //first check if user exists
+      //if no return error message of user not found, and null token
+      //if yes, call gentoken
+      //retrieve token call database
+      //compare userinput token n db token
+      // if same, return message correct 
+      //if wrong return token expire
+      System.out.println("User Token: "+token);
+      Transaction tx2 = session.beginTransaction();
+      try {
+        Query qx = session.createQuery("select secretkey from Info where username=:username");
+        qx.setParameter("username", username);
+        
+        //see if user exists
+        //if dont exists
+        if (qx.uniqueResult()==null){
+            System.out.println("No user found");
+            message="Invalid User! Please generate your token first";
+            auth="No";
+        }
+        //if user exists, start comparing token by generating one first and compare ith user input
+        else {
+            //set and update token
+            
+            try {
+                    //System.out.println("im doing shyt");
+                    String key=qx.getSingleResult().toString();
+                    System.out.println("my skey is:"+key);
+                    TOTP otp = new TOTP();
+                    //generate new token using skey retrieve from database
+                    String newToken = otp.OTP(key);                   
+                    dbtoken = newToken;
+                    
+                    Date tempDate = new Date();
+                    testMain.time = tempDate;
+
+                    Query q = session.createQuery("update Info set token = :token,created_on =:date where username =:username");
+                    q.setParameter("date", testMain.time);
+                    q.setParameter("token", newToken);
+                    q.setParameter("username", username);
+                    
+                    q.executeUpdate();
+                    tx2.commit();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    tx2.rollback();
+                    dbtoken = null;
+                    message = "Could not execute statement";
+                }
+            
+            System.out.println("System generated token: "+dbtoken);
+            if(dbtoken.equals(token)){
+                message="Token validated sucessfully";
+                auth="Yes";
+            }
+            else {
+                message = "Token Expired";
+                auth="No";
+            }
+            
+        }
+        if (tx2.isActive()) {
+                tx2.commit();
+            }
+      }catch(Exception e){
+          e.printStackTrace();
+        
+      }
+      
+      return auth;
+  }
 }

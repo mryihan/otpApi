@@ -14,15 +14,14 @@ import java.util.TimeZone;
 
 public class TOTP {
 
-    
-
     //public TOTP() {}
     private static String otp = "a";
-    private static String secretkey=null;
-    
+    private static String secretkey = null;
+
     public String getSecretkey() {
         return secretkey;
     }
+
     /**
      * This method uses the JCE to provide the crypto algorithm. HMAC computes a
      * Hashed Message Authentication Code with the crypto hash algorithm as a
@@ -52,18 +51,18 @@ public class TOTP {
             throw new UndeclaredThrowableException(gse);
         }
     }
-    
+
     //convert to byte array
     public static byte[] hexStringToByteArray(String s) {
-    int len = s.length();
-    byte[] data = new byte[len / 2];
-    for (int i = 0; i < len; i += 2) {
-        data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                             + Character.digit(s.charAt(i+1), 16));
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i + 1), 16));
+        }
+        return data;
     }
-    return data;
-}
-    
+
     /**
      * This method converts HEX string to Byte[]
      *
@@ -75,7 +74,7 @@ public class TOTP {
         // Adding one byte to get the right conversion
         // values starting with "0" can be converted
         byte[] bArray = new BigInteger("10" + hex, 16).toByteArray();
-        
+
         // Copy all the REAL bytes, not the "first"
         byte[] ret = new byte[bArray.length - 1];
         for (int i = 0; i < ret.length; i++) {
@@ -98,6 +97,12 @@ public class TOTP {
      * @return A numeric String in base 10 that includes
      * {@link truncationDigits} digits
      */
+    public static String generateTOTP(String key,
+            String time,
+            String returnDigits){
+        return generateTOTP(key, time, returnDigits, "HmacSHA1");
+    }
+    
     public static String generateTOTP512(String key,
             String time,
             String returnDigits) {
@@ -136,15 +141,15 @@ public class TOTP {
 
         // Adding one byte to get the right conversion
         //byte[] k = hexStr2Bytes(key);
-        byte[] k =hexStringToByteArray(key);
+        byte[] k = hexStringToByteArray(key);
         /*
         System.out.print("k is:");
         System.out.println(k);
         System.out.print("Converting back to string is:");
         String tests=new String(k);
         System.out.println(tests);
-        */
-        
+         */
+
         hash = hmac_sha1(crypto, k, msg);
         //System.out.print("Hash is: ");
         //System.out.println(hash);
@@ -178,7 +183,8 @@ public class TOTP {
 
         return result;
     }
-    public String generateSecretKey(){
+
+    public String generateSecretKey() {
         String keylist = "1234567890abcdefghijklmnopqrstuvwxyz";
 
         //set 64 bytes otp
@@ -188,59 +194,58 @@ public class TOTP {
         for (int i = 0; i < randomS.length; i++) {
             randomS[i] = keylist.charAt(random.nextInt(keylist.length()));
         }
-        String skey=new String(randomS);
+        String skey = new String(randomS);
         return skey;
     }
-    
-    public String OTP(String secretKey){
+
+    public String OTP(String secretKey) {
         //set secret key, in this instance its a random string, 64 byte/512bit for hmac512
         //String secretkey = "3132333435363738393031323334353637383930" +
         //"313233343536373839303132";
         //randomly generate a secret key
-        
-         secretkey = secretKey;
-         System.out.println("key being used:"+secretkey);
+
+        secretkey = secretKey;
+        System.out.println("key being used:" + secretkey);
         //randomly generate a secretkey
         //System.out.print("Byte length: ");
         //System.out.println(secretkey.getBytes().length);
         long T0 = 0;
-        //30s in millisec
-        long X = 30;
+        //60s in millisec
+        //timestep or how long the token take to expire
+        long X = 60000;
 
-        long testTime[] = {System.currentTimeMillis()};
+        long testTime = System.currentTimeMillis();
         String steps = "0";
-        
+
         try {
 
-            for (int i = 0; i < testTime.length; i++) {
-                //take current time - epoch
-                long T = (testTime[i] - T0) / X;
+            //take current time - epoch
+            long T = (testTime - T0) / X;
 
-                //System.out.println(T);
-                //convert the time decimal value into hexadecimal value in string format
-                steps = Long.toHexString(T).toUpperCase();
-                //ensure that steps is 16word long else add zero from the left
-                while (steps.length() < 16) {
-                    steps = "0" + steps;
-                }
-
-                otp = generateTOTP(secretkey, steps, "5",
-                        "HmacSHA512");
-
+            //System.out.println(T);
+            //convert the time decimal value into hexadecimal value in string format
+            steps = Long.toHexString(T).toUpperCase();
+            //ensure that steps is 16word long else add zero from the left
+            while (steps.length() < 16) {
+                steps = "0" + steps;
             }
+
+            otp = generateTOTP(secretkey, steps, "5",
+                    "HmacSHA512");
+
         } catch (final Exception e) {
             System.out.println("Error : " + e);
         }
 
         return otp;
     }
-    
-    
+
     public String OTP() {
-        secretkey=generateSecretKey();
-        
+        secretkey = generateSecretKey();
+
         return OTP(secretkey);
     }
+
     //test function
     public static boolean verifyOTP(String s) {
         boolean verify = false;
