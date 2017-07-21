@@ -11,6 +11,9 @@ import javax.crypto.spec.SecretKeySpec;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.TimeZone;
+import org.apache.commons.codec.binary.Base32;
+import org.apache.commons.codec.binary.Hex;
+
 
 public class TOTP {
 
@@ -140,8 +143,8 @@ public class TOTP {
         byte[] msg = hexStr2Bytes(time);
 
         // Adding one byte to get the right conversion
-        //byte[] k = hexStr2Bytes(key);
-        byte[] k = hexStringToByteArray(key);
+        byte[] k = hexStr2Bytes(key);
+        //byte[] k = hexStringToByteArray(key);
         /*
         System.out.print("k is:");
         System.out.println(k);
@@ -183,12 +186,13 @@ public class TOTP {
 
         return result;
     }
-
+    
     public String generateSecretKey() {
-        String keylist = "1234567890abcdefghijklmnopqrstuvwxyz";
+        //keylist according to base32
+        String keylist = "234567abcdefghijklmnopqrstuvwxyz";
 
-        //set 64 bytes otp
-        char[] randomS = new char[64];
+        //set 32 bytes otp
+        char[] randomS = new char[32];
         SecureRandom random = new SecureRandom();
 
         for (int i = 0; i < randomS.length; i++) {
@@ -198,22 +202,27 @@ public class TOTP {
         return skey;
     }
 
-    public String OTP(String secretKey) {
+    public String getTOTP(String secretKey) {
         //set secret key, in this instance its a random string, 64 byte/512bit for hmac512
         //String secretkey = "3132333435363738393031323334353637383930" +
         //"313233343536373839303132";
         //randomly generate a secret key
 
-        secretkey = secretKey;
-        System.out.println("key being used:" + secretkey);
+        
+        String normalizedBase32Key = secretKey.toUpperCase();
+        Base32 base32 = new Base32();
+        byte[] bytes=base32.decode(normalizedBase32Key);
+        String Hsecretkey = Hex.encodeHexString(bytes);
+        
+        System.out.println("Hex key used in encryption is :" + Hsecretkey);
         //randomly generate a secretkey
         //System.out.print("Byte length: ");
         //System.out.println(secretkey.getBytes().length);
         long T0 = 0;
-        //60s in millisec
+        //30s in millisec
         //timestep or how long the token take to expire
-        long X = 60000;
-
+        long X = 30000;
+        
         long testTime = System.currentTimeMillis();
         String steps = "0";
 
@@ -231,8 +240,10 @@ public class TOTP {
             }
 
             otp = generateTOTP(secretkey, steps, "5",
-                    "HmacSHA512");
-
+                    "HmacSHA1");
+            //otp= generateTOTP(Hsecretkey, steps, "6",
+            //       "HmacSHA1");
+                   
         } catch (final Exception e) {
             System.out.println("Error : " + e);
         }
@@ -240,10 +251,10 @@ public class TOTP {
         return otp;
     }
 
-    public String OTP() {
+    public String getTOTP() {
         secretkey = generateSecretKey();
-
-        return OTP(secretkey);
+        System.out.println("Generated secret key is:"+secretkey);
+        return getTOTP(secretkey);
     }
 
     //test function
@@ -263,5 +274,41 @@ public class TOTP {
         System.out.println("End");
     }
      */
+    /*
+    public String getTOTPCode(String secretKey) {
+        String normalizedBase32Key = secretKey.toUpperCase();
+        Base32 base32 = new Base32();
+        byte[] bytes = base32.decode(normalizedBase32Key);
+        
+        //byte[] bytes=hexStringToByteArray(secretKey)
+        String hexKey = Hex.encodeHexString(bytes);
+        System.out.println("key used for encrpytion is "+hexKey);
+        //time step in 30s
+        long time = (System.currentTimeMillis() / 1000) / 30;
+        String hexTime = Long.toHexString(time);
+        return TOTP.generateTOTP(hexKey, hexTime, "6");
+    }
+        
+    public String getTOTPCode(){
+        secretkey=generateSecretKey();
+        //secretkey=getRandomSecretKey();
+        System.out.println("Generated secret key is:"+secretkey);
+        return getTOTPCode(secretkey);
+    }
+    
+    
+    public static String getRandomSecretKey() {
+        SecureRandom random = new SecureRandom();
+        byte[] bytes = new byte[20];
+        random.nextBytes(bytes);
+        Base32 base32 = new Base32();
+        String secretKey = base32.encodeToString(bytes);
+        
+        // make the secret key more human-readable by lower-casing and
+        // inserting spaces between each group of 4 characters
+        return secretKey.toLowerCase().replaceAll("(.{4})(?=.{4})", "$1 ");
+    }
+*/
+    
 
 }

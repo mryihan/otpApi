@@ -55,10 +55,10 @@ public class testMain {
                 try {
                     //System.out.println("im doing shyt");
                     String key=q1.getSingleResult().toString();
-                    System.out.println("my skey is:"+key);
+                    System.out.println("secretkey retrieve from database is:"+key);
                     TOTP otp = new TOTP();
-                    String newToken = otp.OTP(key);
-                    
+                    //String newToken = otp.OTP(key);
+                    String newToken=otp.getTOTP(key);
                     token = newToken;
                     //refresh the global time
                     Date tempDate = new Date();
@@ -85,7 +85,8 @@ public class testMain {
                     Info s = new Info();
                     TOTP otp = new TOTP();
                     s.setUsername(username);
-                    token = otp.OTP();
+                    //token = otp.OTP();
+                    token=otp.getTOTP();
                     s.setToken(token);
                     String skey=otp.getSecretkey();
                     System.out.println("key is:"+skey);
@@ -237,7 +238,7 @@ public class testMain {
                     System.out.println("my skey is:"+key);
                     TOTP otp = new TOTP();
                     //generate new token using skey retrieve from database
-                    String newToken = otp.OTP(key);                   
+                    String newToken = otp.getTOTP(key);                   
                     dbtoken = newToken;
                     
                     Date tempDate = new Date();
