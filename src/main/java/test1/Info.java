@@ -1,5 +1,5 @@
 package test1;
-// Generated Jul 18, 2017 10:41:58 AM by Hibernate Tools 4.3.1
+// Generated Jul 24, 2017 11:49:37 AM by Hibernate Tools 4.3.1
 
 
 import java.util.Date;
@@ -15,16 +15,18 @@ public class Info  implements java.io.Serializable {
      private String token;
      private Date createdOn;
      private String secretkey;
+     private String lastConsumeToken;
 
     public Info() {
     }
 
-    public Info(int userId, String username, String token, Date createdOn, String secretkey) {
+    public Info(int userId, String username, String token, Date createdOn, String secretkey, String lastConsumeToken) {
        this.userId = userId;
        this.username = username;
        this.token = token;
        this.createdOn = createdOn;
        this.secretkey = secretkey;
+       this.lastConsumeToken = lastConsumeToken;
     }
    
     public int getUserId() {
@@ -61,6 +63,13 @@ public class Info  implements java.io.Serializable {
     
     public void setSecretkey(String secretkey) {
         this.secretkey = secretkey;
+    }
+    public String getlastConsumeToken() {
+        return this.lastConsumeToken;
+    }
+    
+    public void setlastConsumeToken(String lastConsumeToken) {
+        this.lastConsumeToken = lastConsumeToken;
     }
 
 

@@ -2,6 +2,8 @@ package test1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
@@ -52,13 +54,26 @@ public class userController {
             display.put("Username", name );
             display.put("Token", a.genToken(name));
             display.put("Time created",testMain.time.toString());
+            display.put("QRCode",a.getQrUrl());
             display.put("Message", testMain.message);
             return dataToJson(display);
             
         });
         
         //test method
-         get("/", (request, response) -> "Hello 123");
+         get("/qrcode", (request, response) -> {
+         display.clear();
+         String test=null;
+         testMain a = new testMain();
+         String qrUrl=a.getQRCode();
+         //ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+         //MatrixToImageWriter.writeToStream(a.getQRCode(), "png", outputStream);
+      
+         //return response.raw().getOutputStream();
+         display.put("QRCode: ",qrUrl);
+         return dataToJson(display);
+         }
+         );
         
         //validate user with given username n token
         get("/validate", (request, response) -> {
@@ -96,6 +111,16 @@ public class userController {
             testMain a = new testMain();
             response.type("application/json");
             return dataToJson(a.getAllToken());
+            
+        });
+        
+        //test collision
+        get("/collide", (request, response) -> {
+            //asking for /hello?userid=blahblah
+            //String name = request.queryParams("userid");
+            testMain a = new testMain();
+            response.type("application/json");
+            return dataToJson(a.Collide());
             
         });
 

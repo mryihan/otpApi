@@ -1,19 +1,21 @@
 package test1;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.security.GeneralSecurityException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.math.BigInteger;
+import java.net.URLEncoder;
 import java.security.SecureRandom;
-import java.util.TimeZone;
 import org.apache.commons.codec.binary.Base32;
-import org.apache.commons.codec.binary.Hex;
-
 
 public class TOTP {
 
@@ -100,13 +102,13 @@ public class TOTP {
      * @return A numeric String in base 10 that includes
      * {@link truncationDigits} digits
      */
-    public static String generateTOTP(String key,
+    public static String generateTOTP(byte[] key,
             String time,
-            String returnDigits){
+            String returnDigits) {
         return generateTOTP(key, time, returnDigits, "HmacSHA1");
     }
-    
-    public static String generateTOTP512(String key,
+
+    public static String generateTOTP512(byte[] key,
             String time,
             String returnDigits) {
         return generateTOTP(key, time, returnDigits, "HmacSHA512");
@@ -123,7 +125,7 @@ public class TOTP {
      * @return A numeric String in base 10 that includes
      * {@link truncationDigits} digits
      */
-    public static String generateTOTP(String key,
+    public static String generateTOTP(byte[] key,
             String time,
             String returnDigits,
             String crypto) {
@@ -143,26 +145,18 @@ public class TOTP {
         byte[] msg = hexStr2Bytes(time);
 
         // Adding one byte to get the right conversion
-        byte[] k = hexStr2Bytes(key);
-        //byte[] k = hexStringToByteArray(key);
-        /*
-        System.out.print("k is:");
-        System.out.println(k);
-        System.out.print("Converting back to string is:");
-        String tests=new String(k);
-        System.out.println(tests);
-         */
+        //byte[] k = hexStr2Bytes(key);
+        byte[] k = key;
 
         hash = hmac_sha1(crypto, k, msg);
         //System.out.print("Hash is: ");
         //System.out.println(hash);
-
+        System.out.println("the hash is:"+hash);
+        //hash return an array of 20 byte
         // grab the last byte, the value of the lower 4 bits to use as offset value to determine starting point of slice
         int offset = hash[hash.length - 1] & 0xf;
-        //System.out.println("offset is:");
-        //System.out.printf("0x%02X", hash[offset]);
-        //System.out.println("\n");
-
+        
+        
         //truncate the hash message [bytes] 
         int binary
                 = ((hash[offset] & 0x7f) << 24)
@@ -173,7 +167,7 @@ public class TOTP {
                 | (hash[offset + 3] & 0xff);
         //System.out.print("Binary is: ");
         //System.out.println(Integer.toBinaryString(binary).length());
-        //System.out.println("end");
+        
         // take the modulus to ensure that the otp is within the codeDigits range
         //digits_power is an array up to 8 value
         int otp = binary % DIGITS_POWER[codeDigits];
@@ -186,19 +180,27 @@ public class TOTP {
 
         return result;
     }
-    
+
     public String generateSecretKey() {
         //keylist according to base32
-        String keylist = "234567abcdefghijklmnopqrstuvwxyz";
-
-        //set 32 bytes otp
-        char[] randomS = new char[32];
         SecureRandom random = new SecureRandom();
+        /*
+        String keylist = "234567abcdefghijklmnopqrstuvwxyz";
+        //set 32 bytes otp
+        char[] randomS = new char[64];
+        
 
         for (int i = 0; i < randomS.length; i++) {
             randomS[i] = keylist.charAt(random.nextInt(keylist.length()));
         }
-        String skey = new String(randomS);
+        */
+        //generate a 64 byte secretkey, overkill, SHA1 only use 20 byte
+        byte[] bytes = new byte[64];
+        random.nextBytes(bytes);
+        Base32 base32 = new Base32();
+        String skey = base32.encodeToString(bytes);
+        
+        //String skey = new String(randomS);
         return skey;
     }
 
@@ -208,21 +210,19 @@ public class TOTP {
         //"313233343536373839303132";
         //randomly generate a secret key
 
-        
         String normalizedBase32Key = secretKey.toUpperCase();
         Base32 base32 = new Base32();
-        byte[] bytes=base32.decode(normalizedBase32Key);
-        String Hsecretkey = Hex.encodeHexString(bytes);
-        
-        System.out.println("Hex key used in encryption is :" + Hsecretkey);
-        //randomly generate a secretkey
-        //System.out.print("Byte length: ");
-        //System.out.println(secretkey.getBytes().length);
+        //byte[] bytes=base32.decode(normalizedBase32Key);
+        byte[] skeyinbytes = base32.decode(normalizedBase32Key);
+        //String Hsecretkey = Hex.encodeHexString(bytes);
+        //System.out.println("Hex key used in encryption is :" + skeyinbytes);
+        System.out.print("bytes key used in encryption is:");
+        System.out.println(skeyinbytes);
         long T0 = 0;
         //30s in millisec
         //timestep or how long the token take to expire
-        long X = 30000;
-        
+        //long X = 30000;
+        long X=30000;
         long testTime = System.currentTimeMillis();
         String steps = "0";
 
@@ -230,20 +230,17 @@ public class TOTP {
 
             //take current time - epoch
             long T = (testTime - T0) / X;
-
-            //System.out.println(T);
             //convert the time decimal value into hexadecimal value in string format
             steps = Long.toHexString(T).toUpperCase();
             //ensure that steps is 16word long else add zero from the left
             while (steps.length() < 16) {
                 steps = "0" + steps;
             }
-
-            otp = generateTOTP(secretkey, steps, "5",
+            //otp = generateTOTP(secretkey, steps, "5",
+            //        "HmacSHA512");
+            otp = generateTOTP(skeyinbytes, steps, "6",
                     "HmacSHA1");
-            //otp= generateTOTP(Hsecretkey, steps, "6",
-            //       "HmacSHA1");
-                   
+
         } catch (final Exception e) {
             System.out.println("Error : " + e);
         }
@@ -253,7 +250,8 @@ public class TOTP {
 
     public String getTOTP() {
         secretkey = generateSecretKey();
-        System.out.println("Generated secret key is:"+secretkey);
+        System.out.println("Generated secret key is:" + secretkey);
+        System.out.println("Keylength:"+secretkey.length());
         return getTOTP(secretkey);
     }
 
@@ -267,6 +265,7 @@ public class TOTP {
         }
         return verify;
     }
+
     /*
     public static void main(String[] args) {
         System.out.println("Printing");
@@ -274,41 +273,30 @@ public class TOTP {
         System.out.println("End");
     }
      */
-    /*
-    public String getTOTPCode(String secretKey) {
-        String normalizedBase32Key = secretKey.toUpperCase();
-        Base32 base32 = new Base32();
-        byte[] bytes = base32.decode(normalizedBase32Key);
+    public  String getGoogleAuthenticatorBarCode(String secretKey, String account, String issuer) {
         
-        //byte[] bytes=hexStringToByteArray(secretKey)
-        String hexKey = Hex.encodeHexString(bytes);
-        System.out.println("key used for encrpytion is "+hexKey);
-        //time step in 30s
-        long time = (System.currentTimeMillis() / 1000) / 30;
-        String hexTime = Long.toHexString(time);
-        return TOTP.generateTOTP(hexKey, hexTime, "6");
+        try {
+            return "otpauth://totp/"
+                    + URLEncoder.encode(issuer + ":" + account, "UTF-8").replace("+", "%20")
+                    + "?secret=" + URLEncoder.encode(secretKey, "UTF-8").replace("+", "%20")
+                    + "&issuer=" + URLEncoder.encode(issuer, "UTF-8").replace("+", "%20");
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException(e);
+        }
     }
-        
-    public String getTOTPCode(){
-        secretkey=generateSecretKey();
-        //secretkey=getRandomSecretKey();
-        System.out.println("Generated secret key is:"+secretkey);
-        return getTOTPCode(secretkey);
+
+    public BitMatrix createQRCode(String barCodeData, String filePath, int height, int width)
+            throws WriterException, IOException {
+        BitMatrix matrix = new MultiFormatWriter().encode(barCodeData, BarcodeFormat.QR_CODE,
+                width, height);
+        try (FileOutputStream out = new FileOutputStream(filePath)) {
+            MatrixToImageWriter.writeToStream(matrix, "png", out);
+        }
+        return matrix;
     }
     
-    
-    public static String getRandomSecretKey() {
-        SecureRandom random = new SecureRandom();
-        byte[] bytes = new byte[20];
-        random.nextBytes(bytes);
-        Base32 base32 = new Base32();
-        String secretKey = base32.encodeToString(bytes);
+    public void sampleQRCode(){
         
-        // make the secret key more human-readable by lower-casing and
-        // inserting spaces between each group of 4 characters
-        return secretKey.toLowerCase().replaceAll("(.{4})(?=.{4})", "$1 ");
     }
-*/
-    
 
 }

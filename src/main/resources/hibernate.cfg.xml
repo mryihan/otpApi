@@ -48,7 +48,7 @@ Contributor(s):
     <property name="hibernate.connection.password"/>
     <property name="show_sql">true</property>
     <property name="hibernate.current_session_context_class">thread</property>
-    <!-- enable hibernate to auto update or delete row according to param in Info.class-->
+    <!-- enable hibernate to auto update or delete row according to param in Info.class--> 
     <property name="hibernate.hbm2ddl.auto">create-drop</property>
     <mapping resource="test1/Info.hbm.xml"/>
   </session-factory>
